@@ -1,16 +1,19 @@
 package invoices
 
 import (
+	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
-	"gorm.io/gorm"
 	"upsider-coding-test/cmd/api/model"
 	requestView "upsider-coding-test/cmd/api/view/request/invoices"
+	"upsider-coding-test/internal/auth"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type InvoiceResponse struct {
@@ -52,10 +55,11 @@ func (c *PostController) Post() gin.HandlerFunc {
 			return
 		}
 
-		companyUUID, err := uuid.Parse("04ab7a87-e982-4819-8037-cac837a95d85")
+		// get company ID from context
+		companyUUID, err := getCompanyIDFromContext(ctx)
 		if err != nil {
-			slog.Warn("failed to parse company ID", "error", err)
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid company ID format"})
+			slog.Warn("failed to get company ID", "error", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -129,4 +133,21 @@ func (c *PostController) Post() gin.HandlerFunc {
 			Status:            invoice.Status,
 		})
 	}
+}
+
+func getCompanyIDFromContext(ctx *gin.Context) (uuid.UUID, error) {
+	cid, exists := ctx.Get(auth.CompanyIDKey)
+	if !exists {
+		return uuid.Nil, errors.New("company ID not found in context")
+	}
+
+	companyID, ok := cid.(uuid.UUID)
+	if !ok {
+		slog.Error("invalid company ID type",
+			"type", fmt.Sprintf("%T", cid),
+			"value", fmt.Sprintf("%v", cid))
+		return uuid.Nil, fmt.Errorf("invalid company ID type: expected uuid.UUID, got %T", cid)
+	}
+
+	return companyID, nil
 }

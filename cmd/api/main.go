@@ -8,15 +8,16 @@ import (
 	"net/http"
 	"time"
 
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
-	gl "gorm.io/gorm/logger"
 	"upsider-coding-test/cmd/api/controller/invoices"
+	auth "upsider-coding-test/internal/auth"
 	ul "upsider-coding-test/internal/logger"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/net/netutil"
 	"golang.org/x/sync/errgroup"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	gl "gorm.io/gorm/logger"
 )
 
 const (
@@ -28,6 +29,9 @@ var ErrFailedToStartServer = errors.New("failed to start server")
 func getRouteHandler(db *gorm.DB) http.Handler {
 	e := gin.New()
 	e.Use(gin.Recovery())
+
+	// set middleware of auth api key
+	e.Use(auth.AuthMiddleware(db))
 
 	// Get handlers
 	gc := invoices.NewGetController(db)

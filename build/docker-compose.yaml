@@ -1,0 +1,14 @@
+name: upsider-coding-test
+services:
+  upsider-api:
+    container_name: upsider-api
+    build:
+      context: ..
+      dockerfile: ./cmd/api/Dockerfile
+      target: development
+    environment:
+      ENV: local
+      LISTEN_PORT: 8080
+    ports:
+      - "8100:8080"
+    tty: true

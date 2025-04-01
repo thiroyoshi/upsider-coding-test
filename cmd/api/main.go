@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"time"
 
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	gl "gorm.io/gorm/logger"
 	"upsider-coding-test/cmd/api/controller/invoices"
 	ul "upsider-coding-test/internal/logger"
 
@@ -22,13 +25,13 @@ const (
 
 var ErrFailedToStartServer = errors.New("failed to start server")
 
-func getRouteHandler() http.Handler {
+func getRouteHandler(db *gorm.DB) http.Handler {
 	e := gin.New()
 	e.Use(gin.Recovery())
 
 	// Get handlers
-	gc := invoices.NewGetController()
-	pc := invoices.NewPostController()
+	gc := invoices.NewGetController(db)
+	pc := invoices.NewPostController(db)
 
 	// Set routes
 	v1 := e.Group(PREFIX)
@@ -54,9 +57,16 @@ func main() {
 		return
 	}
 
+	// initialize database
+	db, err := initDB(cfg)
+	if err != nil {
+		slog.Error("failed to start server: failed to initialize database")
+		return
+	}
+
 	// set conditions
 	svMng := http.Server{
-		Handler:      getRouteHandler(),
+		Handler:      getRouteHandler(db),
 		ReadTimeout:  time.Duration(cfg.ReadTimeout) * time.Second,
 		WriteTimeout: time.Duration(cfg.WriteTimeout) * time.Second,
 	}
@@ -95,4 +105,37 @@ func main() {
 	if err := eg.Wait(); err != nil {
 		slog.Error("error running server: ", "error", err)
 	}
+}
+
+func initDB(cfg config) (*gorm.DB, error) {
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Asia/Tokyo",
+		cfg.DBHost,
+		cfg.DBUser,
+		cfg.DBPassword,
+		cfg.DBName,
+		cfg.DBPort,
+	)
+
+	gormConfig := &gorm.Config{
+		Logger: gl.Default.LogMode(gl.Info),
+	}
+
+	db, err := gorm.Open(postgres.Open(dsn), gormConfig)
+	if err != nil {
+		slog.Error("failed to connect database", "error", err)
+		return nil, err
+	}
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		slog.Error("failed to get database instance", "error", err)
+		return nil, err
+	}
+
+	// コネクションプールの設定
+	sqlDB.SetMaxIdleConns(cfg.MaxIdleConnection)
+	sqlDB.SetMaxOpenConns(cfg.MaxOpenConnection)
+
+	return db, nil
 }

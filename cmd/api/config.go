@@ -9,28 +9,19 @@ import (
 )
 
 type config struct {
-	ProjectID                 string
-	ProjectNumber             string
-	Env                       string
-	Location                  string
-	Port                      string
-	MaxConnection             int
-	ReadTimeout               int
-	WriteTimeout              int
-	MemorystoreAddress        string
-	MemorystorePort           string
-	MemorystoreMaxIdle        int
-	MemorystoreMaxActive      int
-	MemorystoreIdleTimeoutSec int
-	SpannerInstanceID         string
-	SpannerDatabaseID         string
-	SpannerMinOpened          uint64
-	SpannerMaxOpened          uint64
-	SpannerMaxIdle            uint64
-	EndpointHash              string
-	WebEndpoint               string
-	PubsubTopicMail           string
-	GCPAPIKey                 string
+	Env               string
+	Location          string
+	Port              string
+	MaxConnection     int
+	ReadTimeout       int
+	WriteTimeout      int
+	DBHost            string
+	DBPort            int
+	DBUser            string
+	DBPassword        string
+	DBName            string
+	MaxIdleConnection int
+	MaxOpenConnection int
 }
 
 func (c *config) readAndValidate() bool {
@@ -89,6 +80,55 @@ func (c *config) readAndValidate() bool {
 	c.WriteTimeout = viper.GetInt("CONNECTION_TIMEOUT_WRITE")
 	if c.WriteTimeout == 0 {
 		slog.Error("CONNECTION_TIMEOUT_WRITE is required")
+		result = false
+	}
+
+	c.DBHost = viper.GetString("DB_HOST")
+	if c.DBHost == "" {
+		slog.Error("DB_HOST is required")
+		result = false
+	}
+
+	dbPort := viper.GetString("DB_PORT")
+	if dbPort == "" {
+		slog.Error("DB_PORT is required")
+		result = false
+	}
+
+	dp, err := strconv.Atoi(dbPort)
+	if err != nil {
+		slog.Error("invalid DB_PORT value")
+		result = false
+	}
+	c.DBPort = dp
+
+	c.DBUser = viper.GetString("DB_USER")
+	if c.DBUser == "" {
+		slog.Error("DB_USER is required")
+		result = false
+	}
+
+	c.DBPassword = viper.GetString("DB_PASSWORD")
+	if c.DBPassword == "" {
+		slog.Error("DB_PASSWORD is required")
+		result = false
+	}
+
+	c.DBName = viper.GetString("DB_NAME")
+	if c.DBName == "" {
+		slog.Error("DB_NAME is required")
+		result = false
+	}
+
+	c.MaxIdleConnection = viper.GetInt("MAX_IDLE_CONNECTION")
+	if c.MaxIdleConnection == 0 {
+		slog.Error("MAX_IDLE_CONNECTION is required")
+		result = false
+	}
+
+	c.MaxOpenConnection = viper.GetInt("MAX_OPEN_CONNECTION")
+	if c.MaxOpenConnection == 0 {
+		slog.Error("MAX_OPEN_CONNECTION is required")
 		result = false
 	}
 

@@ -3,17 +3,43 @@ package invoices
 import (
 	"log/slog"
 	"net/http"
+	"time"
 
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+	"upsider-coding-test/cmd/api/model"
 	requestView "upsider-coding-test/cmd/api/view/request/invoices"
 
 	"github.com/gin-gonic/gin"
 )
 
-type PostController struct {
+type InvoiceResponse struct {
+	ID                string  `json:"id"`
+	CompanyID         string  `json:"companyId"`
+	BusinessPartnerID string  `json:"businessPartnerId"`
+	IssueDate         string  `json:"issueDate"`
+	PaymentAmount     int     `json:"paymentAmount"`
+	Fee               int     `json:"fee"`
+	FeeRate           float64 `json:"feeRate"`
+	ConsumptionTax    int     `json:"consumptionTax"`
+	TaxRate           float64 `json:"taxRate"`
+	TotalAmount       int     `json:"totalAmount"`
+	PaymentDueDate    string  `json:"paymentDueDate"`
+	Status            string  `json:"status"`
 }
 
-func NewPostController() *PostController {
-	return &PostController{}
+type PostController struct {
+	companyRepo *model.CompanyRepository
+	partnerRepo *model.BusinessPartnerRepository
+	invoiceRepo *model.InvoiceRepository
+}
+
+func NewPostController(db *gorm.DB) *PostController {
+	return &PostController{
+		companyRepo: model.NewCompanyRepository(db),
+		partnerRepo: model.NewBusinessPartnerRepository(db),
+		invoiceRepo: model.NewInvoiceRepository(db),
+	}
 }
 
 func (c *PostController) Post() gin.HandlerFunc {
@@ -21,13 +47,86 @@ func (c *PostController) Post() gin.HandlerFunc {
 
 		req, err := requestView.NewPostRequest(ctx)
 		if err != nil {
+			slog.Warn("failed to bind json", "error", err)
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		slog.Info("post request", "req", req)
+		companyUUID, err := uuid.Parse("04ab7a87-e982-4819-8037-cac837a95d85")
+		if err != nil {
+			slog.Warn("failed to parse company ID", "error", err)
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid company ID format"})
+			return
+		}
 
-		slog.Info("post controller")
-		ctx.JSON(http.StatusCreated, gin.H{"message": "created"})
+		// check if partner exists
+		if _, err := c.partnerRepo.FindByID(req.PartnerID); err != nil {
+			slog.Warn("failed to find partner", "error", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		// convert string to uuid
+		partnerUUID, err := uuid.Parse(req.PartnerID)
+		if err != nil {
+			slog.Warn("failed to parse partner ID", "error", err)
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid partner ID format"})
+			return
+		}
+
+		// calculate Fee
+		feeRate := 4
+		fee := req.Amount * feeRate / 100
+
+		// calculate tax
+		taxRate := 10
+		tax := fee * taxRate / 100
+
+		// calculate total amount
+		totalAmount := req.Amount + fee + tax
+
+		// convert string to time
+		paymentDueDate, err := time.Parse("20060102", req.PaymentDue)
+		if err != nil {
+			slog.Warn("failed to parse payment due date", "error", err)
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// create invoice model
+		invoice := model.Invoice{
+			CompanyID:         companyUUID,
+			BusinessPartnerID: partnerUUID,
+			IssueDate:         time.Now(),
+			PaymentAmount:     req.Amount,
+			Fee:               fee,
+			FeeRate:           float64(feeRate) / 100,
+			ConsumptionTax:    tax,
+			TaxRate:           float64(taxRate) / 100,
+			TotalAmount:       totalAmount,
+			PaymentDueDate:    paymentDueDate,
+			Status:            "unpaid",
+		}
+		if err := c.invoiceRepo.Create(&invoice); err != nil {
+			slog.Error("failed to create invoice", "error", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Convert invoice model to response
+		ctx.JSON(http.StatusOK, InvoiceResponse{
+			ID:                invoice.ID.String(),
+			CompanyID:         invoice.CompanyID.String(),
+			BusinessPartnerID: invoice.BusinessPartnerID.String(),
+			IssueDate:         invoice.IssueDate.Format("2006-01-02"),
+			PaymentAmount:     invoice.PaymentAmount,
+			Fee:               invoice.Fee,
+			FeeRate:           invoice.FeeRate,
+			ConsumptionTax:    invoice.ConsumptionTax,
+			TaxRate:           invoice.TaxRate,
+			TotalAmount:       invoice.TotalAmount,
+			PaymentDueDate:    invoice.PaymentDueDate.Format("2006-01-02"),
+			Status:            invoice.Status,
+		})
 	}
 }

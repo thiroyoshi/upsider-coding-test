@@ -7,20 +7,18 @@ import (
 )
 
 type GetRequest struct {
-	StartAt int `json:"startAt"`
-	EndAt   int `json:"endAt"`
+	StartAt string `json:"startAt"`
+	EndAt   string `json:"endAt"`
 }
 
 func NewGetRequest(ctx *gin.Context) (GetRequest, error) {
 	startAtStr := ctx.Query("startAt")
-	startAt, err := val.ValidateDateFormat(startAtStr)
-	if err != nil {
+	if err := val.ValidateDateFormat(startAtStr); err != nil {
 		return GetRequest{}, err
 	}
 
 	endAtStr := ctx.Query("endAt")
-	endAt, err := val.ValidateDateFormat(endAtStr)
-	if err != nil {
+	if err := val.ValidateDateFormat(endAtStr); err != nil {
 		return GetRequest{}, err
 	}
 
@@ -29,7 +27,7 @@ func NewGetRequest(ctx *gin.Context) (GetRequest, error) {
 	}
 
 	return GetRequest{
-		StartAt: startAt,
-		EndAt:   endAt,
+		StartAt: startAtStr,
+		EndAt:   endAtStr,
 	}, nil
 }

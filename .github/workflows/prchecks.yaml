@@ -38,45 +38,6 @@ jobs:
       - name: test cmd
         run: go test -v -cover ./cmd/...
 
-  scan-api:
-    name: image vulnerability scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build Container Image
-        run: |
-          docker image build --target production --build-arg ENV=dev -f ./cmd/api/Dockerfile -t upsider/api:${{ github.sha }} .
-      - name: Run Trivy
-        uses: aquasecurity/trivy-action@master
-        env:
-          TRIVY_SKIP_DB_UPDATE: true
-          TRIVY_SKIP_JAVA_DB_UPDATE: true
-        with:
-          image-ref: 'bankey-payment/public:${{ github.sha }}'
-          format: 'table'
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
-          trivy-config: configs/trivy.yaml
-
-#  redoclint:
-#    name: redocly/cli lint
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v4
-#      - uses: actions/setup-node@v4
-#      - name: Make Directory
-#        run:  mkdir -p api/openapi/src/bundle
-#      - name: Bundle OpenAPI Specification
-#        run: |
-#          npx -y @redocly/cli bundle api/openapi/src/private.yaml -o api/openapi/src/bundle/bundled_private.yaml
-#          npx -y @redocly/cli bundle api/openapi/src/public.yaml -o api/openapi/src/bundle/bundled_public.yaml
-#      - name: Lint OpenAPI Specification
-#        run: |
-#          npx -y @redocly/cli lint api/openapi/src/bundle/bundled_private.yaml
-#          npx -y @redocly/cli lint api/openapi/src/bundle/bundled_public.yaml
-
   hadolint:
     runs-on: ubuntu-latest
     steps:

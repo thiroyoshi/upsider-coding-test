@@ -1,11 +1,12 @@
 package invoices
 
 import (
-	"fmt"
+	"errors"
 	"log/slog"
 
-	"github.com/gin-gonic/gin"
 	val "upsider-coding-test/internal/validation"
+
+	"github.com/gin-gonic/gin"
 )
 
 type PostRequest struct {
@@ -23,7 +24,7 @@ func NewPostRequest(ctx *gin.Context) (PostRequest, error) {
 
 	// Check if request body is empty
 	if req.PartnerID == "" || req.Amount == 0 || req.PaymentDue == "" {
-		return PostRequest{}, fmt.Errorf("request body is empty")
+		return PostRequest{}, errors.New("request body is empty")
 	}
 
 	// Validate partner ID is UUID

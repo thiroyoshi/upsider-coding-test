@@ -31,7 +31,7 @@ func getRouteHandler(db *gorm.DB) http.Handler {
 	e.Use(gin.Recovery())
 
 	// set middleware of auth api key
-	e.Use(auth.AuthMiddleware(db))
+	e.Use(auth.APIKeyAuthMiddleware(db))
 
 	// Get handlers
 	gc := invoices.NewGetController(db)

@@ -16,6 +16,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const HUNDRED = 100
+
 type InvoiceResponse struct {
 	ID                string  `json:"id"`
 	CompanyID         string  `json:"companyId"`
@@ -47,7 +49,6 @@ func NewPostController(db *gorm.DB) *PostController {
 
 func (c *PostController) Post() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-
 		req, err := requestView.NewPostRequest(ctx)
 		if err != nil {
 			slog.Warn("failed to bind json", "error", err)
@@ -80,11 +81,11 @@ func (c *PostController) Post() gin.HandlerFunc {
 
 		// calculate Fee
 		feeRate := 4
-		fee := req.Amount * feeRate / 100
+		fee := req.Amount * feeRate / HUNDRED
 
 		// calculate tax
 		taxRate := 10
-		tax := fee * taxRate / 100
+		tax := fee * taxRate / HUNDRED
 
 		// calculate total amount
 		totalAmount := req.Amount + fee + tax
@@ -104,9 +105,9 @@ func (c *PostController) Post() gin.HandlerFunc {
 			IssueDate:         time.Now(),
 			PaymentAmount:     req.Amount,
 			Fee:               fee,
-			FeeRate:           float64(feeRate) / 100,
+			FeeRate:           float64(feeRate) / HUNDRED,
 			ConsumptionTax:    tax,
-			TaxRate:           float64(taxRate) / 100,
+			TaxRate:           float64(taxRate) / HUNDRED,
 			TotalAmount:       totalAmount,
 			PaymentDueDate:    paymentDueDate,
 			Status:            "unpaid",

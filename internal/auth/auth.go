@@ -16,17 +16,18 @@ var (
 )
 
 const (
-	APIKeyHeader = "X-API-Key"
+	APIKeyHeader = "X-API-Key" //nolint:gosec
 	CompanyIDKey = "companyID"
 )
 
-func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
+func APIKeyAuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 	repo := model.NewAPIKeyRepository(db)
 
 	return func(c *gin.Context) {
 		apiKey := c.GetHeader(APIKeyHeader)
 		if apiKey == "" {
-			c.AbortWithError(http.StatusUnauthorized, ErrMissingAPIKey)
+			c.JSON(http.StatusUnauthorized, ErrMissingAPIKey)
+			c.Abort()
 			return
 		}
 
@@ -34,10 +35,13 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 		apiKeyData, err := repo.FindByAPIKey(apiKey)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				c.AbortWithError(http.StatusUnauthorized, ErrInvalidAPIKey)
+				c.JSON(http.StatusUnauthorized, ErrInvalidAPIKey)
+				c.Abort()
 				return
 			}
-			c.AbortWithError(http.StatusInternalServerError, err)
+
+			c.JSON(http.StatusInternalServerError, err)
+			c.Abort()
 			return
 		}
 

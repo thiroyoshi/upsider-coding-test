@@ -1,3 +1,4 @@
+//nolint:tagalign
 package model
 
 import (

@@ -1,13 +1,16 @@
 package validation
 
 import (
+	"errors"
 	"fmt"
 	"time"
 )
 
+const EIGHT = 8
+
 func ValidateDateFormat(dateStr string) error {
-	if len(dateStr) != 8 {
-		return fmt.Errorf("invalid date format: must be YYYYMMDD")
+	if len(dateStr) != EIGHT {
+		return errors.New("invalid date format: must be YYYYMMDD")
 	}
 
 	year := dateStr[0:4]
@@ -34,7 +37,7 @@ func ValidateDateRange(startAtStr, endAtStr string) error {
 	}
 
 	if start.After(end) {
-		return fmt.Errorf("startAt must be before or equal to endAt")
+		return errors.New("startAt must be before or equal to endAt")
 	}
 	return nil
 }
@@ -46,7 +49,7 @@ func ValidatePastDate(dateStr string) error {
 	}
 
 	if date.Before(time.Now()) {
-		return fmt.Errorf("date must be in the future")
+		return errors.New("date must be in the future")
 	}
 	return nil
 }

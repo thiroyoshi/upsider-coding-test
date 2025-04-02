@@ -16,11 +16,11 @@ var (
 )
 
 const (
-	APIKeyHeader = "X-API-Key"
+	APIKeyHeader = "X-API-Key" //nolint:gosec
 	CompanyIDKey = "companyID"
 )
 
-func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
+func APIKeyAuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 	repo := model.NewAPIKeyRepository(db)
 
 	return func(c *gin.Context) {

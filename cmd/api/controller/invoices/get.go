@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"time"
 
-	"gorm.io/gorm"
 	"upsider-coding-test/cmd/api/model"
 	requestView "upsider-coding-test/cmd/api/view/request/invoices"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type GetController struct {

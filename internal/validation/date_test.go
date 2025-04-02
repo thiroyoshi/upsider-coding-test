@@ -21,7 +21,6 @@ func TestValidateDateFormat(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // capture range variable
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			err := validation.ValidateDateFormat(tt.dateStr)
@@ -48,7 +47,6 @@ func TestValidateDateRange(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // capture range variable
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			err := validation.ValidateDateRange(tt.startAtStr, tt.endAtStr)
@@ -73,7 +71,6 @@ func TestValidatePastDate(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // capture range variable
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			err := validation.ValidatePastDate(tt.dateStr)

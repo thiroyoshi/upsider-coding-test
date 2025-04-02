@@ -5,11 +5,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gin-gonic/gin"
 	"upsider-coding-test/cmd/api/view/request/invoices"
+
+	"github.com/gin-gonic/gin"
 )
 
 func TestNewGetRequest(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		query   map[string]string
@@ -50,8 +53,9 @@ func TestNewGetRequest(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt // capture range variable
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			gin.SetMode(gin.TestMode)
 			ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
 			req, _ := http.NewRequest(http.MethodGet, "/", nil)

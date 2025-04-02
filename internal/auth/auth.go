@@ -26,7 +26,8 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		apiKey := c.GetHeader(APIKeyHeader)
 		if apiKey == "" {
-			c.AbortWithError(http.StatusUnauthorized, ErrMissingAPIKey)
+			c.JSON(http.StatusUnauthorized, ErrMissingAPIKey)
+			c.Abort()
 			return
 		}
 
@@ -34,10 +35,13 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 		apiKeyData, err := repo.FindByAPIKey(apiKey)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				c.AbortWithError(http.StatusUnauthorized, ErrInvalidAPIKey)
+				c.JSON(http.StatusUnauthorized, ErrInvalidAPIKey)
+				c.Abort()
 				return
 			}
-			c.AbortWithError(http.StatusInternalServerError, err)
+
+			c.JSON(http.StatusInternalServerError, err)
+			c.Abort()
 			return
 		}
 

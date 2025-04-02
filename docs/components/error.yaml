@@ -1,0 +1,21 @@
+Error400:
+  type: object
+  properties:
+    error:
+      type: string
+      description: エラーメッセージ
+      example: invalid request
+Error401:
+  type: object
+  properties:
+    error:
+      type: string
+      description: エラーメッセージ
+      example: invalid auth
+Error500:
+  type: object
+  properties:
+    error:
+      type: string
+      description: エラーメッセージ
+      example: internal server error

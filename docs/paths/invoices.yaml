@@ -1,0 +1,98 @@
+invoices:
+  post:
+    summary: 請求書データ作成
+    description: |
+      - 新しい請求書データを作成する
+      - 請求金額 は自動的に計算されるものとする
+      - 支払金額 に手数料4%を加えたものに更に手数料の消費税を加えたものを請求金額とする
+      - 例) 支払金額 10,000 の場合は請求金額は 10,000 + (10,000 * 0.04 * 1.10) = 10,440
+    tags:
+      - invoices
+    requestBody:
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - partnerId
+              - amount
+              - paymentDue
+            properties:
+              partnerId:
+                type: string
+                description: 取引先企業ID
+              amount:
+                type: integer
+                description: 支払金額
+              paymentDue:
+                type: string
+                description: 支払期日（YYYYMMDD）
+    responses:
+      '200':
+        description: 請求データ作成成功
+        content:
+          application/json:
+            schema:
+              $ref: "../components/invoices.yaml#/Invoice"
+      '400':
+        description: リクエストが不正
+        content:
+          application/json:
+            schema:
+              $ref: "../components/error.yaml#/Error400"
+      '401':
+        description: 認証が不正
+        content:
+          application/json:
+            schema:
+              $ref: "../components/error.yaml#/Error401"
+      '500':
+        description: サーバーエラー
+        content:
+          application/json:
+            schema:
+              $ref: "../components/error.yaml#/Error500"
+
+  get:
+    summary: 請求書データ一覧取得
+    description: |
+      - 請求書データを取得する
+      - 取得開始日と取得終了日を指定することで、その期間内の請求書データを取得する
+    tags:
+      - invoices
+    parameters:
+      - in: query
+        name: startAt
+        schema:
+          type: string
+        description: 取得開始日（YYYYMMDD）
+      - in: query
+        name: endAt
+        schema:
+          type: string
+        description: 取得終了日（YYYYMMDD）
+    responses:
+      '200':
+        description: 請求データ一覧取得成功
+        content:
+          application/json:
+            schema:
+              $ref: "../components/invoices.yaml#/Invoices"
+      '400':
+        description: リクエストが不正
+        content:
+          application/json:
+            schema:
+              $ref: "../components/error.yaml#/Error400"
+      '401':
+        description: 認証が不正
+        content:
+          application/json:
+            schema:
+              $ref: "../components/error.yaml#/Error401"
+      '500':
+        description: サーバーエラー
+        content:
+          application/json:
+            schema:
+              $ref: "../components/error.yaml#/Error500"

@@ -1,0 +1,60 @@
+Invoices:
+  type: object
+  properties:
+    invoices:
+      type: array
+      description: 請求書データ一覧
+      items:
+        $ref: '#/Invoice'
+
+Invoice:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: 請求書の一意の識別子
+    companyId:
+      type: string
+      format: uuid
+      description: 会社の一意の識別子
+    businessPartnerId:
+      type: string
+      format: uuid
+      description: 取引先の一意の識別子
+    issueDate:
+      type: string
+      format: date
+      description: 請求書の発行日
+    paymentAmount:
+      type: integer
+      description: 支払金額
+    fee:
+      type: integer
+      description: 手数料
+    feeRate:
+      type: number
+      format: float
+      description: 手数料率
+    consumptionTax:
+      type: integer
+      description: 消費税
+    taxRate:
+      type: number
+      format: float
+      description: 消費税率
+    totalAmount:
+      type: integer
+      description: 支払総額
+    paymentDueDate:
+      type: string
+      format: date
+      description: 支払期日
+    status:
+      type: string
+      description: 請求書のステータス
+      enum:
+        - unpaid
+        - processing
+        - paid
+        - error

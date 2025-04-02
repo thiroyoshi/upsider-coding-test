@@ -12,3 +12,9 @@ golangci:
 	go list -f '{{.Dir}}/...' -m | xargs golangci-lint run -c configs/.golangci.yaml
 test:
 	go test -v -count=1 -cover ./cmd/... ./internal/...
+
+redoc-bundle:
+	mkdir -p docs/bundle
+	docker run --rm -v .:/spec redocly/cli bundle docs/public.yaml -o docs/bundle/bundled.yaml
+	mkdir -p docs/build
+	docker run --rm -v .:/spec redocly/cli build-docs docs/bundle/bundled.yaml -o docs/build/public.html
